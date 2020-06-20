@@ -1,4 +1,15 @@
 // Your code
+`define OPCODE mem_rdata_I[6:0]
+`define RD mem_rdata_D[11:7]
+`define RS1 mem_rdata_D[19:15]
+`define RS2 mem_rdata_D[24:20]
+`define FUNCT3 mem_rdata_D[12:14]
+`define FUNCT7 mem_rdata_D[25:31]
+`define IMM mem_rdata_D[20:31]
+
+`include "Alu.v"
+`include "Alu_Control.v"
+`include "Mux.v"
 
 module CHIP(clk,
             rst_n,
@@ -35,6 +46,23 @@ module CHIP(clk,
 
     // Todo: other wire/reg
 
+    // alu signal
+    wire ALUSignal;
+    wire ALUInput2;
+
+    // controller signal
+    wire Branch;
+    wire MemRead;
+    wire MemtoReg;
+    wire ALUOp;
+    wire MemWrite;
+    wire ALUSrc;
+    wire RegWrite;
+
+    assign rs1 = `RS1;
+    assign rs2 = `RS2;
+    assign rd = `RD;
+
     //---------------------------------------//
     // Do not modify this part!!!            //
     reg_file reg0(                           //
@@ -50,6 +78,29 @@ module CHIP(clk,
     //---------------------------------------//
     
     // Todo: any combinational/sequential circuit
+    ALU_Control alu_control0(
+        .Funct3(`FUNCT3),
+        .Funct7(`FUNCT7),
+        .ALUOp(ALUOp),
+        .ALUSignal(ALUSignal)
+    )
+
+    Control control0(
+        .Opcode(`OPCODE),
+        .Branch(Branch),
+        .MemRead(MemRead),
+        .MemtoReg(MemtoReg),
+        .ALUOp(ALUOp),
+        .MemWrite(MemWrite),
+        .ALUSrc(ALUSrc),
+        .RegWrite(RegWrite)
+    )
+
+    Mux2 mux0(
+        .s1(rs2_data),
+        .s2(), // Todo imm geneerator
+        .o1(ALUInput2)
+    )
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

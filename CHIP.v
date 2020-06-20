@@ -99,7 +99,7 @@ module CHIP(clk,
 
     Mux2 mux0(
         .s1(rs2_data),
-        .s2(), // Todo imm geneerator
+        .s2(), // Todo imm generator
         .control(ALUSrc),
         .o1(ALUInput2)
     )
@@ -109,6 +109,13 @@ module CHIP(clk,
         .s2(mem_rdata_D),
         .control(MemtoReg),
         .o1(rd_data)
+    )
+
+    Mux2 mux2(
+        .s1(PC+4),
+        .s2(PC), // Todo imm generator PC + imm << 1
+        .control(Branch), // Todo alu output  Branch && zero
+        .o1(PC_nxt)
     )
 
     always @(*) begin

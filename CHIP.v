@@ -54,7 +54,7 @@ module CHIP(clk,
     wire Branch;
     wire MemRead;
     wire MemtoReg;
-    wire ALUOp;
+    wire [2:0] ALUOp;
     wire MemWrite;
     wire ALUSrc;
     wire RegWrite;

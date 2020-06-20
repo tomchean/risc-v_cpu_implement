@@ -1,11 +1,11 @@
 // Your code
 `define OPCODE mem_rdata_I[6:0]
-`define RD mem_rdata_D[11:7]
-`define RS1 mem_rdata_D[19:15]
-`define RS2 mem_rdata_D[24:20]
-`define FUNCT3 mem_rdata_D[12:14]
-`define FUNCT7 mem_rdata_D[25:31]
-`define IMM mem_rdata_D[20:31]
+`define RD mem_rdata_I[11:7]
+`define RS1 mem_rdata_I[19:15]
+`define RS2 mem_rdata_I[24:20]
+`define FUNCT3 mem_rdata_I[12:14]
+`define FUNCT7 mem_rdata_I[25:31]
+`define IMM mem_rdata_I[20:31]
 
 `include "Alu.v"
 `include "Alu_Control.v"
@@ -95,12 +95,27 @@ module CHIP(clk,
         .ALUSrc(ALUSrc),
         .RegWrite(RegWrite)
     )
+    // Todo ALU module
 
     Mux2 mux0(
         .s1(rs2_data),
         .s2(), // Todo imm geneerator
+        .control(ALUSrc),
         .o1(ALUInput2)
     )
+
+    Mux2 mux1(
+        .s1(), // Todo alu result
+        .s2(mem_rdata_D),
+        .control(MemtoReg),
+        .o1(rd_data)
+    )
+
+    always @(*) begin
+        mem_wen_D = MemWrite;
+        mem_wdata_D = MemWrite ? q2 : 0;
+        mem_addr_D = 0 // Todo alu output
+    end
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

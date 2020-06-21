@@ -2,7 +2,7 @@ module Control(
     input   [5:0]  Opcode,
     output   reg   Branch,
     output   reg   MemRead,
-    output   reg   MemtoReg,
+    output   reg   [1:0] MemtoReg,
     output   reg   [2:0] ALUOp,
     output   reg   MemWrite,
     output   reg   ALUSrc,
@@ -32,7 +32,7 @@ module Control(
             `ARITHMETIC : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b00;
                 ALUOp = `RTYPE;
                 MemWrite = 0;
                 ALUSrc = 0;
@@ -41,7 +41,7 @@ module Control(
             `ARI_IMM : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b00;
                 ALUOp = `ITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
@@ -50,7 +50,7 @@ module Control(
             `BRANCH : begin
                 Branch = 1;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b00;
                 ALUOp = `BTYPE;
                 MemWrite = 0;
                 ALUSrc = 0;
@@ -59,7 +59,7 @@ module Control(
             `MEMLOAD : begin
                 Branch = 0;
                 MemRead = 1;
-                MemtoReg = 1;
+                MemtoReg = 2'b01;
                 ALUOp = `LITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
@@ -68,7 +68,7 @@ module Control(
             `MEMSAVE : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b00;
                 ALUOp = `STYPE;
                 MemWrite = 1;
                 ALUSrc = 1;
@@ -77,7 +77,7 @@ module Control(
             `AUIPC : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b10;
                 ALUOp = `UTYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
@@ -86,7 +86,7 @@ module Control(
             `JAL : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b11;
                 ALUOp = `JTYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
@@ -95,13 +95,13 @@ module Control(
             `JALR : begin
                 Branch = 0;
                 MemRead = 0;
-                MemtoReg = 0;
+                MemtoReg = 2'b11;
                 ALUOp = `JITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
-            // Todo auipc and mul support
+            // Todo mul support
             /**
             `MUL   : begin
                 Branch = 1;

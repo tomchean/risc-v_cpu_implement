@@ -10,6 +10,7 @@
 `include "Alu.v"
 `include "Alu_Control.v"
 `include "Mux.v"
+`include "Imm_Gen.v"
 
 module CHIP(clk,
             rst_n,
@@ -51,12 +52,15 @@ module CHIP(clk,
     wire ALUInput2;
     wire ALUZout;
     wire [31:0] ALUResult;
+    wire [31:0] ImmOut;
+    wire [31:0] Addr;
+    wire [31:0] PCPlus4;
     wire PCControl;
 
     // controller signal
     wire Branch;
     wire MemRead;
-    wire MemtoReg;
+    wire [1:0] MemtoReg;
     wire [2:0] ALUOp;
     wire MemWrite;
     wire ALUSrc;
@@ -65,6 +69,9 @@ module CHIP(clk,
     assign rs1 = `RS1;
     assign rs2 = `RS2;
     assign rd = `RD;
+    assign PCControl = Branch & ALUZout;
+    assign Addr = ImmOut + PC;
+    assign PCPlus4 = PC + 4;
 
     //---------------------------------------//
     // Do not modify this part!!!            //
@@ -82,7 +89,6 @@ module CHIP(clk,
     
     // Todo: any combinational/sequential circuit
     
-    assign PCControl = Branch & ALUZout;
 
     ALU_Control alu_control0(
         .Funct3(`FUNCT3),
@@ -102,6 +108,12 @@ module CHIP(clk,
         .RegWrite(RegWrite)
     )
 
+    Imm_Gen imm_gen0(
+        .Instruction(`IMM),
+        .Type(ALUOp),
+        .Imm(ImmOut)
+    )
+
     Alu alu0(
         .ALUSignal(ALUSignal),
         .AiA(rs1_data),
@@ -112,21 +124,26 @@ module CHIP(clk,
 
     Mux2 aluInput2(
         .s1(rs2_data),
-        .s2(), // Todo imm generator
+        .s2(ImmOut),
         .control(ALUSrc),
         .o1(ALUInput2)
     )
 
-    Mux2 regWriteData(
+    Mux4 regWriteData(
         .s1(ALUResult),
         .s2(mem_rdata_D),
+        .s3(Addr),
+        .s4(PCPlus4), // 
         .control(MemtoReg),
         .o1(rd_data)
     )
 
-    Mux2 PCUpdate(
-        .s1(PC+4),
-        .s2(PC), // Todo imm generator PC + imm << 1
+    // Todo add jal and branch support for PCUpdate mechanism
+    Mux4 PCUpdate(
+        .s1(PCPlus4),
+        .s2(ALUResult), // use when jalr
+        .s3(), // use when jal
+        .s4(), // use when branch
         .control(PCControl),
         .o1(PC_nxt)
     )
@@ -134,7 +151,7 @@ module CHIP(clk,
     always @(*) begin
         mem_wen_D = MemWrite;
         mem_wdata_D = MemWrite ? q2 : 0;
-        mem_addr_D = 0 // Todo alu output
+        mem_addr_D = ALUResult;
     end
 
     always @(posedge clk or negedge rst_n) begin

@@ -5,7 +5,7 @@
 `define RS2 mem_rdata_I[24:20]
 `define FUNCT3 mem_rdata_I[12:14]
 `define FUNCT7 mem_rdata_I[25:31]
-`define IMM mem_rdata_I[20:31]
+`define IMM mem_rdata_I[7:31]
 
 `include "Alu.v"
 `include "Alu_Control.v"
@@ -49,6 +49,9 @@ module CHIP(clk,
     // alu signal
     wire ALUSignal;
     wire ALUInput2;
+    wire ALUZout;
+    wire [31:0] ALUResult;
+    wire PCControl;
 
     // controller signal
     wire Branch;
@@ -78,6 +81,9 @@ module CHIP(clk,
     //---------------------------------------//
     
     // Todo: any combinational/sequential circuit
+    
+    assign PCControl = Branch & ALUZout;
+
     ALU_Control alu_control0(
         .Funct3(`FUNCT3),
         .Funct7(`FUNCT7),
@@ -95,26 +101,33 @@ module CHIP(clk,
         .ALUSrc(ALUSrc),
         .RegWrite(RegWrite)
     )
-    // Todo ALU module
 
-    Mux2 mux0(
+    Alu alu0(
+        .ALUSignal(ALUSignal),
+        .AiA(rs1_data),
+        .AiB(ALUInput2),
+        .ACout(ALUResult),
+        .AZout(ALUZout)
+    )
+
+    Mux2 aluInput2(
         .s1(rs2_data),
         .s2(), // Todo imm generator
         .control(ALUSrc),
         .o1(ALUInput2)
     )
 
-    Mux2 mux1(
-        .s1(), // Todo alu result
+    Mux2 regWriteData(
+        .s1(ALUResult),
         .s2(mem_rdata_D),
         .control(MemtoReg),
         .o1(rd_data)
     )
 
-    Mux2 mux2(
+    Mux2 PCUpdate(
         .s1(PC+4),
         .s2(PC), // Todo imm generator PC + imm << 1
-        .control(Branch), // Todo alu output  Branch && zero
+        .control(PCControl),
         .o1(PC_nxt)
     )
 

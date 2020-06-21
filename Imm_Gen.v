@@ -1,8 +1,8 @@
 module Imm_Gen (
     input   [24:0] Instruction,
     input   [2:0]  Type,
-    output  [31:0] Imm
-)
+    output reg [31:0] Imm
+);
 
     parameter RTYPE  = 3'b000;
     parameter ITYPE  = 3'b001;
@@ -14,7 +14,7 @@ module Imm_Gen (
     parameter LJTYPE = 3'b111;
 
     always @(*) begin
-        case (Type):
+        case (Type)
             default : Imm = 32'h0;
         endcase
     end

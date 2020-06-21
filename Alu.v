@@ -2,10 +2,8 @@ module Alu(
     input   [4:0]   ALUSignal,
     input   [31:0]  AiA,
     input   [31:0]  AiB,
-    output  [31:0]  Aout,
-    input   ACin,           // ALU carry input
-    output  ACout,          // ALU carry output  
-    output  AZout,          // ALU Zero output    
+    output  reg [31:0]  Aout,
+    output  reg AZout           // ALU Zero output    
 );      
 
     parameter ADD  = 4'b0000;
@@ -21,34 +19,34 @@ module Alu(
 
     always @(*) begin 
         case(ALUSignal)
-            `ADD: begin
-                {ACout, Aout} = AiA + AiB + ACin; // Addition
+            ADD: begin
+                Aout = AiA + AiB; // Addition
             end
-            `SUB: begin
+            SUB: begin
                 Aout = AiA - AiB;       // Substration
             end
-            `AND: begin
+            AND: begin
                 Aout = AiA & AiB;       // Bitwise AND
             end
-            `OR: begin
+            OR: begin
                 Aout = AiA | AiB;       // Bitwise OR
             end
-            `SLTU: begin                //?? SLTU or SLTI?
+            SLTU: begin                //?? SLTU or SLTI?
                 if (AiA < AiB)
                     Aout = 32'b1;
                 else
                     Aout = 32'b0;
             end            
-            `XOR: begin
+            XOR: begin
                 Aout = AiA ^ AiB;       // XOR
             end
-            `SLL: begin
+            SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
             end
-            `SRL: begin
+            SRL: begin
                 Aout = AiA >>> AiB;     // Arithmetic shift AiB bits right
             end
-            `SRA: begin
+            SRA: begin
                 Aout = AiA >> AiB;      // Shift AiB bits right
             end
         endcase

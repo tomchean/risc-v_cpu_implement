@@ -1,13 +1,13 @@
 module Control(
-    input   [5:0]  Opcode,
-    output   reg   Branch,
-    output   reg   MemRead,
-    output   reg   [1:0] MemtoReg,
-    output   reg   [2:0] ALUOp,
-    output   reg   MemWrite,
-    output   reg   ALUSrc,
-    output   reg   RegWrite
-)
+    input   [6:0]  Opcode,
+    output  reg   Branch,
+    output  reg   MemRead,
+    output  reg   [1:0] MemtoReg,
+    output  reg   [2:0] ALUOp,
+    output  reg   MemWrite,
+    output  reg   ALUSrc,
+    output  reg   RegWrite
+);
 
     parameter RTYPE  = 3'b000;
     parameter ITYPE  = 3'b001;
@@ -16,7 +16,7 @@ module Control(
     parameter UTYPE  = 3'b100;
     parameter JTYPE  = 3'b101;
     parameter LITYPE = 3'b110;
-    parameter LJTYPE = 3'b111;
+    parameter JITYPE = 3'b111;
 
     parameter ARITHMETIC = 7'b0110011;
     parameter ARI_IMM    = 7'b0010011;
@@ -28,82 +28,82 @@ module Control(
     parameter JALR       = 7'b1100111;
 
     always @(*) begin
-        case(Opcode):
-            `ARITHMETIC : begin
+        case(Opcode)
+            ARITHMETIC : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b00;
-                ALUOp = `RTYPE;
+                ALUOp = RTYPE;
                 MemWrite = 0;
                 ALUSrc = 0;
                 RegWrite = 1;
             end
-            `ARI_IMM : begin
+            ARI_IMM : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b00;
-                ALUOp = `ITYPE;
+                ALUOp = ITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
-            `BRANCH : begin
+            BRANCH : begin
                 Branch = 1;
                 MemRead = 0;
                 MemtoReg = 2'b00;
-                ALUOp = `BTYPE;
+                ALUOp = BTYPE;
                 MemWrite = 0;
                 ALUSrc = 0;
                 RegWrite = 1;
             end
-            `MEMLOAD : begin
+            MEMLOAD : begin
                 Branch = 0;
                 MemRead = 1;
                 MemtoReg = 2'b01;
-                ALUOp = `LITYPE;
+                ALUOp = LITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
-            `MEMSAVE : begin
+            MEMSAVE : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b00;
-                ALUOp = `STYPE;
+                ALUOp = STYPE;
                 MemWrite = 1;
                 ALUSrc = 1;
                 RegWrite = 0;
             end
-            `AUIPC : begin
+            AUIPC : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b10;
-                ALUOp = `UTYPE;
+                ALUOp = UTYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
-            `JAL : begin
+            JAL : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b11;
-                ALUOp = `JTYPE;
+                ALUOp = JTYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
-            `JALR : begin
+            JALR : begin
                 Branch = 0;
                 MemRead = 0;
                 MemtoReg = 2'b11;
-                ALUOp = `JITYPE;
+                ALUOp = JITYPE;
                 MemWrite = 0;
                 ALUSrc = 1;
                 RegWrite = 1;
             end
             // Todo mul support
             /**
-            `MUL   : begin
+            MUL   : begin
                 Branch = 1;
                 MemRead = 0;
                 MemtoReg = 0;

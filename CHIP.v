@@ -3,14 +3,15 @@
 `define RD mem_rdata_I[11:7]
 `define RS1 mem_rdata_I[19:15]
 `define RS2 mem_rdata_I[24:20]
-`define FUNCT3 mem_rdata_I[12:14]
-`define FUNCT7 mem_rdata_I[25:31]
-`define IMM mem_rdata_I[7:31]
+`define FUNCT3 mem_rdata_I[14:12]
+`define FUNCT7 mem_rdata_I[31:25]
+`define IMM mem_rdata_I[31:7]
 
 `include "Alu.v"
 `include "Alu_Control.v"
 `include "Mux.v"
 `include "Imm_Gen.v"
+`include "Control.v"
 
 module CHIP(clk,
             rst_n,
@@ -48,8 +49,8 @@ module CHIP(clk,
     // Todo: other wire/reg
 
     // alu signal
-    wire ALUSignal;
-    wire ALUInput2;
+    wire [4:0]  ALUSignal;
+    wire [31:0] ALUInput2;
     wire ALUZout;
     wire [31:0] ALUResult;
     wire [31:0] ImmOut;
@@ -95,7 +96,7 @@ module CHIP(clk,
         .Funct7(`FUNCT7),
         .ALUOp(ALUOp),
         .ALUSignal(ALUSignal)
-    )
+    );
 
     Control control0(
         .Opcode(`OPCODE),
@@ -106,28 +107,28 @@ module CHIP(clk,
         .MemWrite(MemWrite),
         .ALUSrc(ALUSrc),
         .RegWrite(RegWrite)
-    )
+    );
 
     Imm_Gen imm_gen0(
         .Instruction(`IMM),
         .Type(ALUOp),
         .Imm(ImmOut)
-    )
+    );
 
     Alu alu0(
         .ALUSignal(ALUSignal),
         .AiA(rs1_data),
         .AiB(ALUInput2),
-        .ACout(ALUResult),
+        .Aout(ALUResult),
         .AZout(ALUZout)
-    )
+    );
 
     Mux2 aluInput2(
         .s1(rs2_data),
         .s2(ImmOut),
         .control(ALUSrc),
         .o1(ALUInput2)
-    )
+    );
 
     Mux4 regWriteData(
         .s1(ALUResult),
@@ -136,7 +137,7 @@ module CHIP(clk,
         .s4(PCPlus4), // 
         .control(MemtoReg),
         .o1(rd_data)
-    )
+    );
 
     // Todo add jal and branch support for PCUpdate mechanism
     Mux4 PCUpdate(
@@ -146,13 +147,11 @@ module CHIP(clk,
         .s4(), // use when branch
         .control(PCControl),
         .o1(PC_nxt)
-    )
+    );
 
-    always @(*) begin
-        mem_wen_D = MemWrite;
-        mem_wdata_D = MemWrite ? q2 : 0;
-        mem_addr_D = ALUResult;
-    end
+    assign  mem_wen_D = MemWrite;
+    assign  mem_wdata_D = MemWrite ? rs2_data: 0;
+    assign  mem_addr_D = ALUResult;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -208,9 +207,4 @@ module reg_file(clk, rst_n, wen, a1, a2, aw, d, q1, q2);
                 mem[i] <= mem_nxt[i];
         end       
     end
-endmodule
-
-module multDiv(clk, rst_n, valid, ready, mode, in_A, in_B, out);
-    // Todo: your HW3
-
 endmodule

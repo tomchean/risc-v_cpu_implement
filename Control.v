@@ -1,6 +1,6 @@
 module Control(
     input   [6:0]  Opcode,
-    output  reg   Branch,
+    output  reg   [1:0] PCControl,
     output  reg   MemRead,
     output  reg   [1:0] MemtoReg,
     output  reg   [2:0] ALUOp,
@@ -30,7 +30,7 @@ module Control(
     always @(*) begin
         case(Opcode)
             ARITHMETIC : begin
-                Branch = 0;
+                PCControl = 2'b00;
                 MemRead = 0;
                 MemtoReg = 2'b00;
                 ALUOp = RTYPE;
@@ -39,7 +39,7 @@ module Control(
                 RegWrite = 1;
             end
             ARI_IMM : begin
-                Branch = 0;
+                PCControl = 2'b00;
                 MemRead = 0;
                 MemtoReg = 2'b00;
                 ALUOp = ITYPE;
@@ -48,7 +48,7 @@ module Control(
                 RegWrite = 1;
             end
             BRANCH : begin
-                Branch = 1;
+                PCControl = 2'b01;
                 MemRead = 0;
                 MemtoReg = 2'b00;
                 ALUOp = BTYPE;
@@ -57,7 +57,7 @@ module Control(
                 RegWrite = 1;
             end
             MEMLOAD : begin
-                Branch = 0;
+                PCControl = 2'b00;
                 MemRead = 1;
                 MemtoReg = 2'b01;
                 ALUOp = LITYPE;
@@ -66,7 +66,7 @@ module Control(
                 RegWrite = 1;
             end
             MEMSAVE : begin
-                Branch = 0;
+                PCControl = 2'b00;
                 MemRead = 0;
                 MemtoReg = 2'b00;
                 ALUOp = STYPE;
@@ -75,7 +75,7 @@ module Control(
                 RegWrite = 0;
             end
             AUIPC : begin
-                Branch = 0;
+                PCControl = 2'b00;
                 MemRead = 0;
                 MemtoReg = 2'b10;
                 ALUOp = UTYPE;
@@ -84,7 +84,7 @@ module Control(
                 RegWrite = 1;
             end
             JAL : begin
-                Branch = 0;
+                PCControl = 2'b10;
                 MemRead = 0;
                 MemtoReg = 2'b11;
                 ALUOp = JTYPE;
@@ -93,7 +93,7 @@ module Control(
                 RegWrite = 1;
             end
             JALR : begin
-                Branch = 0;
+                PCControl = 2'b11;
                 MemRead = 0;
                 MemtoReg = 2'b11;
                 ALUOp = JITYPE;

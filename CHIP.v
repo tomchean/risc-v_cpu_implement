@@ -38,7 +38,7 @@ module CHIP(clk,
     // Do not modify this part!!!            //
     // Exception: You may change wire to reg //
     reg    [31:0] PC          ;              //
-    wire   [31:0] PC_nxt      ;              //
+    reg    [31:0] PC_nxt      ;              //
     wire          regWrite    ;              //
     wire   [ 4:0] rs1, rs2, rd;              //
     wire   [31:0] rs1_data    ;              //
@@ -47,6 +47,7 @@ module CHIP(clk,
     //---------------------------------------//
 
     // Todo: other wire/reg
+    assign mem_addr_I = PC;
 
     // alu signal
     wire [4:0]  ALUSignal;
@@ -56,10 +57,9 @@ module CHIP(clk,
     wire [31:0] ImmOut;
     wire [31:0] Addr;
     wire [31:0] PCPlus4;
-    wire PCControl;
+    wire [1:0] PCControl;
 
     // controller signal
-    wire Branch;
     wire MemRead;
     wire [1:0] MemtoReg;
     wire [2:0] ALUOp;
@@ -67,10 +67,10 @@ module CHIP(clk,
     wire ALUSrc;
     wire RegWrite;
 
+    assign regWrite = RegWrite;
     assign rs1 = `RS1;
     assign rs2 = `RS2;
     assign rd = `RD;
-    assign PCControl = Branch & ALUZout;
     assign Addr = ImmOut + PC;
     assign PCPlus4 = PC + 4;
 
@@ -100,7 +100,7 @@ module CHIP(clk,
 
     Control control0(
         .Opcode(`OPCODE),
-        .Branch(Branch),
+        .PCControl(PCControl),
         .MemRead(MemRead),
         .MemtoReg(MemtoReg),
         .ALUOp(ALUOp),
@@ -139,28 +139,29 @@ module CHIP(clk,
         .o1(rd_data)
     );
 
-    // Todo add jal and branch support for PCUpdate mechanism
-    Mux4 PCUpdate(
-        .s1(PCPlus4),
-        .s2(ALUResult), // use when jalr
-        .s3(), // use when jal
-        .s4(), // use when branch
-        .control(PCControl),
-        .o1(PC_nxt)
-    );
-
     assign  mem_wen_D = MemWrite;
     assign  mem_wdata_D = MemWrite ? rs2_data: 0;
     assign  mem_addr_D = ALUResult;
 
+    always @(*) begin
+        case (PCControl)
+            2'b00 : PC_nxt = PC + 4;
+            2'b01 : begin
+                if (ALUZout == 1'b0) PC_nxt = PC + ImmOut << 1; // branch
+                else PC_nxt = PC + 4;
+            end
+            2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 
+            2'b11 : PC_nxt = ALUResult;          //jalr 
+            default : PC_nxt = PC + 4; 
+        endcase
+    end
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             PC <= 32'h00010000; // Do not modify this value!!!
-            
         end
         else begin
             PC <= PC_nxt;
-            
         end
     end
 endmodule

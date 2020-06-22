@@ -12,6 +12,7 @@
 `include "Mux.v"
 `include "Imm_Gen.v"
 `include "Control.v"
+`include "Muldiv.v"
 
 module CHIP(clk,
             rst_n,
@@ -128,6 +129,17 @@ module CHIP(clk,
         .s2(ImmOut),
         .control(ALUSrc),
         .o1(ALUInput2)
+    );
+
+    Muldiv muldiv(
+        .clk(clk),
+        .rst_n(rst_n),
+        .valid(Muldiv_valid),
+        .mode(Muldiv_mode),
+        .in_A(rs1_data),
+        .in_B(ALUInput2),
+        .ready(Muldiv_ready),
+        .out(Muldiv_out)
     );
 
     Mux4 regWriteData(

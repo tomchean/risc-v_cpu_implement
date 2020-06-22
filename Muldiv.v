@@ -1,20 +1,13 @@
-module multDiv(
-    clk,
-    rst_n,
-    valid,
-    ready,
-    mode,
-    in_A,
-    in_B,
-    out
+module Muldiv(
+    input               clk,
+    input               rst_n,
+    input               valid,
+    input               mode,       // mode: 0: multu, 1: divu
+    input       [31:0]  in_A,
+    input       [31:0]  in_B,
+    output reg          ready,
+    output reg  [63:0]  out
 );
-
-    // Definition of ports
-    input         clk, rst_n;
-    input         valid, mode; // mode: 0: multu, 1: divu
-    output        ready;
-    input  [31:0] in_A, in_B;
-    output [63:0] out;
 
     // Definition of states
     parameter IDLE = 2'b00;

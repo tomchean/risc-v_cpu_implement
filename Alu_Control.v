@@ -66,6 +66,7 @@ module ALU_Control(
             UTYPE :  ALUSignal = ADD; // only AUIPC
             JTYPE :  ALUSignal = ADD; // only JAL
             JITYPE : ALUSignal = ADD; // only JALR
+            LITYPE : ALUSignal = ADD; // only lw
         endcase
     end
 endmodule

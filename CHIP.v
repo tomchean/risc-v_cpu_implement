@@ -147,7 +147,7 @@ module CHIP(clk,
         case (PCControl)
             2'b00 : PC_nxt = PC + 4;
             2'b01 : begin
-                if (ALUZout == 1'b0) PC_nxt = PC + ImmOut << 1; // branch
+                if (ALUZout == 1'b1) PC_nxt = PC + (ImmOut << 1); // branch
                 else PC_nxt = PC + 4;
             end
             2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 

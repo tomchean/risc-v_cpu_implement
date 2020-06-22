@@ -3,7 +3,7 @@ module Alu(
     input   [31:0]  AiA,
     input   [31:0]  AiB,
     output  reg [31:0]  Aout,
-    output  reg AZout           // ALU Zero output    
+    output  reg AZout                   // ALU Zero output    
 );      
 
     parameter ADD  = 4'b0000;
@@ -20,28 +20,44 @@ module Alu(
     always @(*) begin 
         case(ALUSignal)
             ADD: begin
-                Aout = AiA + AiB; // Addition
+                Aout = AiA + AiB;       // Addition
             end
             SUB: begin
                 Aout = AiA - AiB;       // Substration
             end
-            AND: begin
-                Aout = AiA & AiB;       // Bitwise AND
-            end
-            OR: begin
-                Aout = AiA | AiB;       // Bitwise OR
-            end
-            SLTU: begin                //?? SLTU or SLTI?
-                if (AiA < AiB)
-                    Aout = 32'b1;
-                else
-                    Aout = 32'b0;
-            end            
-            XOR: begin
-                Aout = AiA ^ AiB;       // XOR
-            end
             SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
+            end
+            SLT: begin
+                if (AiB[31] == 1'b0) begin
+                    if (AiA[31] == 1'b1)
+                        Aout = 1'b1;
+                    else begin
+                        if (AiA < AiB)
+                            Aout = 1'b1;
+                        else
+                            Aout = 1'b0;
+                    end
+                end
+                else begin
+                    if (AiA[31] == 1'b0)
+                        Aout = 1'b0;
+                    else begin
+                        if (AiA[30:0] < AiB[30:0])
+                            Aout = 1'b0;
+                        else
+                            Aout = 1'b1;
+                    end
+                end
+            end
+            SLTU: begin                 //Unsigned SLT
+                if (AiA < AiB)
+                    Aout = 1'b1;
+                else
+                    Aout = 1'b0;
+            end
+            XOR: begin
+                Aout = AiA ^ AiB;       // XOR
             end
             SRL: begin
                 Aout = AiA >>> AiB;     // Arithmetic shift AiB bits right
@@ -49,10 +65,18 @@ module Alu(
             SRA: begin
                 Aout = AiA >> AiB;      // Shift AiB bits right
             end
+            OR: begin
+                Aout = AiA | AiB;       // Bitwise OR
+            end
+            AND: begin
+                Aout = AiA & AiB;       // Bitwise AND
+            end
         endcase
     end
+
     always @(Aout) begin
-        if(Aout==0)
+        if (Aout == 0)
             AZout = 1;
     end
+
 endmodule

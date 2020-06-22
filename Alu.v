@@ -2,17 +2,11 @@ module Alu(
     input   [4:0]   ALUSignal,
     input   [31:0]  AiA,
     input   [31:0]  AiB,
+    input           valid,
+    input           mode,
     output  reg [31:0]  Aout,
     output  reg AZout                   // ALU Zero output    
 );      
-
-    `include "Alu_Control.v"
-
-    ALU_Control alu_control0(
-        .ALUSignal(ALUSignal)
-        .valid(valid)
-        .mode(mode)
-    );
 
     parameter ADD  = 4'b0000;
     parameter SUB  = 4'b0001;
@@ -51,7 +45,10 @@ module Alu(
                 if (counter == 31) state_nxt = OUT;
                 else state_nxt = DIV;
             end
-            OUT : state_nxt = IDLE;
+            OUT : begin
+                state_nxt = IDLE;
+                ready = 1;
+            end
         default: state_nxt = OUT;
         endcase
     end

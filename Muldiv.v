@@ -5,8 +5,8 @@ module Muldiv(
     input               mode,       // mode: 0: multu, 1: divu
     input       [31:0]  in_A,
     input       [31:0]  in_B,
-    output reg          ready,
-    output reg  [63:0]  out
+    output              ready,
+    output      [63:0]  out
 );
 
     // Definition of states

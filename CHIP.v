@@ -12,7 +12,6 @@
 `include "Mux.v"
 `include "Imm_Gen.v"
 `include "Control.v"
-`include "Muldiv.v"
 
 module CHIP(clk,
             rst_n,
@@ -50,6 +49,9 @@ module CHIP(clk,
     // Todo: other wire/reg
     assign mem_addr_I = PC;
 
+    // FSM signal
+    wire ALUState;
+
     // alu signal
     wire [4:0]  ALUSignal;
     wire [31:0] ALUInput2;
@@ -75,6 +77,9 @@ module CHIP(clk,
     assign Addr = ImmOut + PC;
     assign PCPlus4 = PC + 4;
 
+    parameter SCYCLE = 1'b0;
+    parameter MCYCLE = 1'b1;
+
     //---------------------------------------//
     // Do not modify this part!!!            //
     reg_file reg0(                           //
@@ -90,8 +95,6 @@ module CHIP(clk,
     //---------------------------------------//
     
     // Todo: any combinational/sequential circuit
-    
-
     ALU_Control alu_control0(
         .Funct3(`FUNCT3),
         .Funct7(`FUNCT7),
@@ -117,11 +120,13 @@ module CHIP(clk,
     );
 
     Alu alu0(
+        .clk(clk),
         .ALUSignal(ALUSignal),
         .AiA(rs1_data),
         .AiB(ALUInput2),
         .Aout(ALUResult),
-        .AZout(ALUZout)
+        .AZout(ALUZout),
+        .state(ALUState)
     );
 
     Mux2 aluInput2(
@@ -129,17 +134,6 @@ module CHIP(clk,
         .s2(ImmOut),
         .control(ALUSrc),
         .o1(ALUInput2)
-    );
-
-    Muldiv muldiv(
-        .clk(clk),
-        .rst_n(rst_n),
-        .valid(Muldiv_valid),
-        .mode(Muldiv_mode),
-        .in_A(rs1_data),
-        .in_B(ALUInput2),
-        .ready(Muldiv_ready),
-        .out(Muldiv_out)
     );
 
     Mux4 regWriteData(
@@ -156,16 +150,19 @@ module CHIP(clk,
     assign  mem_addr_D = ALUResult;
 
     always @(*) begin
-        case (PCControl)
-            2'b00 : PC_nxt = PC + 4;
-            2'b01 : begin
-                if (ALUZout == 1'b1) PC_nxt = PC + (ImmOut << 1); // branch
-                else PC_nxt = PC + 4;
-            end
-            2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 
-            2'b11 : PC_nxt = ALUResult;          //jalr 
-            default : PC_nxt = PC + 4; 
-        endcase
+        if (ALUState == MCYCLE) PC_nxt = PC;
+        else begin
+            case (PCControl)
+                2'b00 : PC_nxt = PC + 4;
+                2'b01 : begin
+                    if (ALUZout == 1'b1) PC_nxt = PC + (ImmOut << 1); // branch
+                    else PC_nxt = PC + 4;
+                end
+                2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 
+                2'b11 : PC_nxt = ALUResult;          //jalr 
+                default : PC_nxt = PC + 4; 
+            endcase
+        end
     end
 
     always @(posedge clk or negedge rst_n) begin

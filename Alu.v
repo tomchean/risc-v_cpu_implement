@@ -6,6 +6,14 @@ module Alu(
     output  reg AZout                   // ALU Zero output    
 );      
 
+    `include "Alu_Control.v"
+
+    ALU_Control alu_control0(
+        .ALUSignal(ALUSignal)
+        .valid(valid)
+        .mode(mode)
+    );
+
     parameter ADD  = 4'b0000;
     parameter SUB  = 4'b0001;
     parameter SLL  = 4'b0010;

@@ -25,7 +25,7 @@ module Muldiv(
     assign ready = (state == 2'b11);
     
     // Combinational always block
-    always @(*) begin
+/*    always @(*) begin
         case(state)
             IDLE: begin
                 if (valid) begin
@@ -45,7 +45,7 @@ module Muldiv(
             OUT : state_nxt = IDLE;
         default: state_nxt = OUT;
         endcase
-    end
+    end */
 
     always @(*) begin
         case(state)

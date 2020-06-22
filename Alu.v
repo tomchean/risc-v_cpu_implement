@@ -16,6 +16,37 @@ module Alu(
     parameter SRA  = 4'b0111;
     parameter OR   = 4'b1000;
     parameter AND  = 4'b1001;
+    parameter MUL  = 99;
+    parameter DIV  = 98;
+
+    // ALU FSM
+    always @(ALUSignal) begin
+        case(state)
+            IDLE: begin
+                if (valid) begin
+                    if (mode) state_nxt = DIV;
+                    else state_nxt = MULT;
+                end
+                else begin
+                    if (mode) state_nxt = SCC;
+                end
+                else state_nxt = IDLE;
+            end
+            SCC: begin
+                if (counter == 1) state_nxt = OUT;
+            end
+            MULT: begin
+                if (counter == 31) state_nxt = OUT;
+                else state_nxt = MULT;
+            end
+            DIV : begin
+                if (counter == 31) state_nxt = OUT;
+                else state_nxt = DIV;
+            end
+            OUT : state_nxt = IDLE;
+        default: state_nxt = OUT;
+        endcase
+    end
 
     always @(*) begin 
         case(ALUSignal)
@@ -30,31 +61,23 @@ module Alu(
             end
             SLT: begin
                 if (AiB[31] == 1'b0) begin
-                    if (AiA[31] == 1'b1)
-                        Aout = 1'b1;
+                    if (AiA[31] == 1'b1) Aout = 1'b1;
                     else begin
-                        if (AiA < AiB)
-                            Aout = 1'b1;
-                        else
-                            Aout = 1'b0;
+                        if (AiA < AiB) Aout = 1'b1;
+                        else Aout = 1'b0;
                     end
                 end
                 else begin
-                    if (AiA[31] == 1'b0)
-                        Aout = 1'b0;
+                    if (AiA[31] == 1'b0) Aout = 1'b0;
                     else begin
-                        if (AiA[30:0] < AiB[30:0])
-                            Aout = 1'b0;
-                        else
-                            Aout = 1'b1;
+                        if (AiA[30:0] < AiB[30:0]) Aout = 1'b0;
+                        else Aout = 1'b1;
                     end
                 end
             end
             SLTU: begin                 //Unsigned SLT
-                if (AiA < AiB)
-                    Aout = 1'b1;
-                else
-                    Aout = 1'b0;
+                if (AiA < AiB) Aout = 1'b1;
+                else Aout = 1'b0;
             end
             XOR: begin
                 Aout = AiA ^ AiB;       // XOR
@@ -70,6 +93,12 @@ module Alu(
             end
             AND: begin
                 Aout = AiA & AiB;       // Bitwise AND
+            end
+            MUL: begin
+                Aout = AiA * AiB;       // Multiplication
+            end
+            DIV: begin
+                Aout = AiA / AiB;       // Division
             end
         endcase
     end

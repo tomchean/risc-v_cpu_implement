@@ -26,20 +26,8 @@ module Alu(
     parameter SCS  = 1'b0;
     parameter MCS  = 1'b1;
 
-    //reg     [1:0]   ALUstate, ALUstate_nxt;
     reg     clk, ALUstate, ALUstate_nxt;
     integer   i;
-
-    assign ALUSignal = SRL;             // For test: Set value to ALUSignal
-    assign AiA = 32'hFFFF_FFFF;         // For test: Set value to ALUinA
-    assign AiB = 32'h0000_0005;         // For test: Set value to ALUinB
-
-    // Clock waveform definition            // For test
-    always begin
-        for (i=1; i<=100; i=i+1) begin
-            #(`CLCYE_TIME*0.5) clk = ~clk;   // For test
-        end
-    end
 
     // FSM ALUstate
     always @(ALUSignal) begin

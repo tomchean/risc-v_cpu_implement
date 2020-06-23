@@ -1,12 +1,15 @@
+`define CLCYE_TIME 10.0
+
 module Alu(
     input   [4:0]   ALUSignal,
     input   [31:0]  AiA,
     input   [31:0]  AiB,
-    input           valid,
-    input           mode,
+    input           ready,
     output  reg [31:0]  Aout,
-    output  reg AZout                   // ALU Zero output    
-);      
+    output  reg     AZout,              // ALU Zero output
+    output  reg     valid,
+    output  reg     mode
+);
 
     parameter ADD  = 4'b0000;
     parameter SUB  = 4'b0001;
@@ -18,38 +21,50 @@ module Alu(
     parameter SRA  = 4'b0111;
     parameter OR   = 4'b1000;
     parameter AND  = 4'b1001;
-    parameter MUL  = 99;
-    parameter DIV  = 98;
+    parameter MUL  = 4'b1100;
+    parameter DIV  = 4'b1101;
+    parameter SCS  = 1'b0;
+    parameter MCS  = 1'b1;
 
-    // ALU FSM
+    //reg     [1:0]   ALUstate, ALUstate_nxt;
+    reg     clk, ALUstate, ALUstate_nxt;
+    integer   i;
+
+    assign ALUSignal = SRL;             // For test: Set value to ALUSignal
+    assign AiA = 32'hFFFF_FFFF;         // For test: Set value to ALUinA
+    assign AiB = 32'h0000_0005;         // For test: Set value to ALUinB
+
+    // Clock waveform definition            // For test
+    always begin
+        for (i=1; i<=100; i=i+1) begin
+            #(`CLCYE_TIME*0.5) clk = ~clk;   // For test
+        end
+    end
+
+    // FSM ALUstate
     always @(ALUSignal) begin
-        case(state)
-            IDLE: begin
-                if (valid) begin
-                    if (mode) state_nxt = DIV;
-                    else state_nxt = MULT;
-                end
-                else begin
-                    if (mode) state_nxt = SCC;
-                end
-                else state_nxt = IDLE;
+        case(ALUstate)
+            SCS: begin                  // Single cycle state
+                if ((ALUSignal == MUL) || (ALUSignal == DIV)) ALUstate_nxt = MCS;
+                else ALUstate_nxt = SCS;
             end
-            SCC: begin
-                if (counter == 1) state_nxt = OUT;
+            MCS: begin                  // Multi cycle state
+                if (ready) ALUstate_nxt = SCS;
             end
-            MULT: begin
-                if (counter == 31) state_nxt = OUT;
-                else state_nxt = MULT;
+        default: ALUstate_nxt = SCS;
+        endcase
+    end
+
+    always @(*) begin
+        case(ALUstate)
+            SCS: begin
+                valid = 0;
             end
-            DIV : begin
-                if (counter == 31) state_nxt = OUT;
-                else state_nxt = DIV;
+            MCS: begin
+                valid = 1;
+                #(`CLCYE_TIME)
+                valid = 0;
             end
-            OUT : begin
-                state_nxt = IDLE;
-                ready = 1;
-            end
-        default: state_nxt = OUT;
         endcase
     end
 
@@ -64,7 +79,7 @@ module Alu(
             SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
             end
-            SLT: begin
+            SLT: begin                  // Signed SLT
                 if (AiB[31] == 1'b0) begin
                     if (AiA[31] == 1'b1) Aout = 1'b1;
                     else begin
@@ -80,7 +95,7 @@ module Alu(
                     end
                 end
             end
-            SLTU: begin                 //Unsigned SLT
+            SLTU: begin                 // Unsigned SLT
                 if (AiA < AiB) Aout = 1'b1;
                 else Aout = 1'b0;
             end
@@ -100,9 +115,13 @@ module Alu(
                 Aout = AiA & AiB;       // Bitwise AND
             end
             MUL: begin
+                mode = 0;
                 Aout = AiA * AiB;       // Multiplication
             end
             DIV: begin
+                mode = 1;
+                #(`CLCYE_TIME)
+                mode = 0;
                 Aout = AiA / AiB;       // Division
             end
         endcase

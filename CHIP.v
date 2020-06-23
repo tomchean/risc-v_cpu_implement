@@ -126,7 +126,7 @@ module CHIP(clk,
         .AiB(ALUInput2),
         .Aout(ALUResult),
         .AZout(ALUZout),
-        .state(ALUState)
+        .state_out(ALUState)
     );
 
     Mux2 aluInput2(

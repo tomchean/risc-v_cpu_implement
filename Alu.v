@@ -6,8 +6,8 @@ module Alu(
     input   [31:0]  AiA,
     input   [31:0]  AiB,
     output  reg [31:0]  Aout,
-    output  reg AZout,                // ALU Zero output    
-    output  reg state
+    output  reg  AZout,                // ALU Zero output    
+    output  state_out
 );      
 
     parameter ADD  = 4'b0000;
@@ -26,15 +26,18 @@ module Alu(
     parameter SCYCLE = 1'b0;
     parameter MCYCLE = 1'b1;
 
-    reg mode;
+    reg state = 1'b0;
+    reg mode = 1'b0;
     reg rst_n;
     reg valid;
+    reg mulDiv_ready = 1'b0;
     wire [63:0] mulDivOut;
     wire ready;
     wire w_rst_n;
     wire w_mode;
     wire w_valid;
 
+    assign state_out = state;
     assign w_rst_n = rst_n; 
     assign w_mode = mode; 
     assign w_valid = valid; 
@@ -50,14 +53,26 @@ module Alu(
         .out(mulDivOut)
     );
 
-    always @(*) begin
+    always @(posedge clk) begin
+        mulDiv_ready  = 1'b0;
+    end
+
+    always @(ready) begin
         case (state)
             MCYCLE : begin
                 if (ready == 1'b1) begin
-                    rst_n = 1'b1;
+                    mulDiv_ready  = 1'b1;
+                    rst_n = 1'b0;
                     state = SCYCLE;
+                    valid = 1'b0;
                     Aout = mulDivOut[31:0];
                 end
+                else state = SCYCLE; 
+            end
+            SCYCLE : begin 
+            end
+            default : begin
+                state = SCYCLE;
             end
         endcase
     end
@@ -67,6 +82,12 @@ module Alu(
         case(ALUSignal)
             ADD: begin
                 Aout = AiA + AiB;       // Addition
+                state = SCYCLE;
+                valid = 1'b0;
+                /** Todo
+                * Hard code here
+                * remove it after fix
+                **/
             end
             SUB: begin
                 Aout = AiA - AiB;       // Substration
@@ -118,16 +139,27 @@ module Alu(
                 Aout = AiA & AiB;       // Bitwise AND
             end
             MUL : begin
-                if (state != MCYCLE) begin
-                    mode = 1'b0;
-                    rst_n = 1'b0;
-                    valid = 1'b1;
-                end
+                case (state)
+                    SCYCLE : begin
+                        if (mulDiv_ready == 0) begin
+                            mode = 1'b0;
+                            rst_n = 1'b1;
+                            valid = 1'b1;
+                            state = MCYCLE;
+                        end
+                    end
+                    /** Todo 
+                    *   fix when mul output valid, change state to SCYCLE
+                    *   but in next cycle will change back to MCYCLE
+                    **/
+                    MCYCLE : begin
+                    end
+                endcase
             end
         endcase
     end
 
-    always @(Aout) begin
+    always @(*) begin
         if (Aout == 0) AZout = 1;
         else AZout = 0;
     end

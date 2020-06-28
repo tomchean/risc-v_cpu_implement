@@ -91,11 +91,17 @@ module Alu(
             end
             SUB: begin
                 Aout = AiA - AiB;       // Substration
+                state = SCYCLE;
+                valid = 1'b0;
             end
             SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
+                state = SCYCLE;
+                valid = 1'b0;
             end
             SLT: begin
+                state = SCYCLE;
+                valid = 1'b0;
                 if (AiB[31] == 1'b0) begin
                     if (AiA[31] == 1'b1)
                         Aout = 1'b1;
@@ -122,21 +128,33 @@ module Alu(
                     Aout = 1'b1;
                 else
                     Aout = 1'b0;
+                state = SCYCLE;
+                valid = 1'b0;
             end
             XOR: begin
                 Aout = AiA ^ AiB;       // XOR
+                state = SCYCLE;
+                valid = 1'b0;
             end
             SRL: begin
                 Aout = AiA >>> AiB;     // Arithmetic shift AiB bits right
+                state = SCYCLE;
+                valid = 1'b0;
             end
             SRA: begin
                 Aout = AiA >> AiB;      // Shift AiB bits right
+                state = SCYCLE;
+                valid = 1'b0;
             end
             OR: begin
                 Aout = AiA | AiB;       // Bitwise OR
+                state = SCYCLE;
+                valid = 1'b0;
             end
             AND: begin
                 Aout = AiA & AiB;       // Bitwise AND
+                state = SCYCLE;
+                valid = 1'b0;
             end
             MUL : begin
                 case (state)

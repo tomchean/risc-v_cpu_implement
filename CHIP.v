@@ -155,8 +155,17 @@ module CHIP(clk,
             case (PCControl)
                 2'b00 : PC_nxt = PC + 4;
                 2'b01 : begin
-                    if (ALUZout == 1'b1) PC_nxt = PC + (ImmOut << 1); // branch
-                    else PC_nxt = PC + 4;
+                        $display("ALUSignal is %d", ALUSignal);
+                        $display("AiA = %h  AiB = %h  Aout = %h", rs1_data, ALUInput2, ALUResult);
+                        if ((`FUNCT3 == 3'b000) && (ALUResult == 0)) begin
+                            PC_nxt = PC + (ImmOut << 1); // beq
+                            $display("BEQ & ALUZout = %b", ALUZout);
+                        end
+                        else if ((`FUNCT3 == 3'b001) && (ALUResult != 0)) begin
+                            PC_nxt = PC + (ImmOut << 1); // bne
+                            $display("BNE & ALUZout = %b", ALUZout);
+                        end
+                        else PC_nxt = PC + 4;
                 end
                 2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 
                 2'b11 : PC_nxt = ALUResult;          //jalr 

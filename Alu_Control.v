@@ -74,7 +74,13 @@ module ALU_Control(
                 endcase
             end
             STYPE :  ALUSignal = ADD;
-            BTYPE :  ALUSignal = SUB; // only BEQ
+            //BTYPE :  ALUSignal = SUB; // only BEQ
+            BTYPE : begin
+                case (Funct3)
+                    3'b000: ALUSignal = SUB;
+                    3'b001: ALUSignal = SUB;
+                endcase
+            end
             UTYPE :  ALUSignal = ADD; // only AUIPC
             JTYPE :  ALUSignal = ADD; // only JAL
             JITYPE : ALUSignal = ADD; // only JALR

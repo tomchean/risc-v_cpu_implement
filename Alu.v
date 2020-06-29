@@ -5,8 +5,7 @@ module Alu(
     input   [4:0]   ALUSignal,
     input   [31:0]  AiA,
     input   [31:0]  AiB,
-    input           valid,
-    input           mode,
+    input           ready,
     output  reg [31:0]  Aout,
     output  reg  AZout,                // ALU Zero output    
     output  state_out
@@ -182,9 +181,13 @@ module Alu(
                 Aout = 32'b0;
             end
             MUL: begin
+                mode = 0;
                 Aout = AiA * AiB;       // Multiplication
             end
             DIV: begin
+                mode = 1;
+                #(`CLCYE_TIME)
+                mode = 0;
                 Aout = AiA / AiB;       // Division
             end
         endcase

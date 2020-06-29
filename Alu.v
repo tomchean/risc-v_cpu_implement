@@ -53,19 +53,12 @@ module Alu(
         .out(mulDivOut)
     );
 
-    always @(posedge clk) begin
-        mulDiv_ready  = 1'b0;
-    end
-
     always @(ready) begin
         case (state)
             MCYCLE : begin
                 if (ready == 1'b1) begin
                     mulDiv_ready  = 1'b1;
-                    rst_n = 1'b0;
                     state = SCYCLE;
-                    valid = 1'b0;
-                    Aout = mulDivOut[31:0];
                 end
                 else state = SCYCLE; 
             end
@@ -84,6 +77,7 @@ module Alu(
                 Aout = AiA + AiB;       // Addition
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
                 /** Todo
                 * Hard code here
                 * remove it after fix
@@ -93,15 +87,18 @@ module Alu(
                 Aout = AiA - AiB;       // Substration
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SLT: begin
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
                 if (AiB[31] == 1'b0) begin
                     if (AiA[31] == 1'b1)
                         Aout = 1'b1;
@@ -130,40 +127,51 @@ module Alu(
                     Aout = 1'b0;
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             XOR: begin
                 Aout = AiA ^ AiB;       // XOR
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SRL: begin
                 Aout = AiA >>> AiB;     // Arithmetic shift AiB bits right
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SRA: begin
                 Aout = AiA >> AiB;      // Shift AiB bits right
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             OR: begin
                 Aout = AiA | AiB;       // Bitwise OR
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             AND: begin
                 Aout = AiA & AiB;       // Bitwise AND
                 state = SCYCLE;
                 valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             MUL : begin
+                Aout = mulDivOut[31:0];
                 case (state)
                     SCYCLE : begin
                         if (mulDiv_ready == 0) begin
-                            mode = 1'b0;
                             rst_n = 1'b1;
                             valid = 1'b1;
                             state = MCYCLE;
+                        end
+                        else begin
+                            rst_n = 1'b0;
+                            valid = 1'b0;
+                            state = SCYCLE;
                         end
                     end
                     /** Todo 
@@ -173,6 +181,9 @@ module Alu(
                     MCYCLE : begin
                     end
                 endcase
+            end
+            default : begin
+                Aout = 32'b0;
             end
         endcase
     end

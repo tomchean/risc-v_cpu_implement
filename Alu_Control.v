@@ -1,10 +1,8 @@
 module ALU_Control(
-    input   [2:0]    Funct3,
-    input   [6:0]       Funct7,
-    input   [2:0]       ALUOp,
-    output  reg [4:0]   ALUSignal,
-    output              valid,
-    output              mode,
+    input   [2:0]   Funct3,
+    input   [6:0]   Funct7,
+    input   [2:0]   ALUOp,
+    output  reg [4:0]   ALUSignal
 );
 
     parameter RTYPE  = 3'b000;
@@ -30,23 +28,13 @@ module ALU_Control(
     parameter DIV  = 4'b1011;
 
     always @(*) begin 
-        valid = 0;
-        mode = 0;
         case (ALUOp)
             RTYPE : begin
                 if (Funct7 == 7'b0000001) begin
                     // only Support mul and div now
                     case (Funct3)
-                        3'b000 : begin 
-                            ALUSignal = MUL;
-                            valid = 1;
-                            mode = 0;
-                        end
-                        3'b100 : begin
-                            ALUSignal = DIV;
-                            valid = 1;
-                            mode = 1;
-                        end
+                        3'b000 : ALUSignal = MUL;
+                        3'b100 : ALUSignal = DIV;
                         default: ALUSignal = ADD;
                     endcase
                 end

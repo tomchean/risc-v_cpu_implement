@@ -1,0 +1,41 @@
+.data
+    n: .word 10 # You can change this number
+    
+.text
+.globl __start
+
+FUNCTION:
+    # Todo: define your own function in HW1
+    addi t3, x0, 1            # t3= 1 since T(t3)=1 [ T(1)=1 ]
+    addi t4, x0, 2            # t4 =2
+    add  t2, x0, t0           # set memory base address t0 to pointer t2 
+LoopD21:
+    addi t2, t2, 4            # mem_addr = mem_addr + 4
+#    srli x10, x10, 1         # Divide n by 2
+    div x10, x10, t4          # Div by 2 directly (no right shifting)
+    sw x10, 0(t2)             # Save the n/2 to memory at address t2   
+    bne x10, t3, LoopD21      # Jump to the loop if Q(n/2) has not yet 1
+LoopRecProd:
+#    slli t3, t3, 2            # 4*T(n/2)
+    mul t3, t3, t4
+    mul t3, t3, t4
+    addi t2, t2, -4           # mem_addr = mem_addr - 4
+    lw  t1, 0(t2)             # Load n from memory
+#    slli t1, t1, 1            # 2*n
+    mul t1, t1, t4
+    add t3, t3, t1            # 4*T(n/2) + 2*n
+    bne t0, t2, LoopRecProd   # Move up to next n and calculate recursively
+    add x10, x0, t3
+#    addi x10, x0, 188          # Temp cheating
+    jalr x0, 0(x1)
+
+# Do not modify this part!!! #
+__start:                     #
+    la   t0, n               #
+    lw   x10, 0(t0)          #
+    jal  x1,FUNCTION         #
+    la   t0, n               #
+    sw   x10, 4(t0)          #
+    addi a0,x0,10            #
+    ecall                    #
+##############################

@@ -1,11 +1,15 @@
+`include "Muldiv.v"
+
 module Alu(
+    input    clk,
     input   [4:0]   ALUSignal,
     input   [31:0]  AiA,
     input   [31:0]  AiB,
     input           valid,
     input           mode,
     output  reg [31:0]  Aout,
-    output  reg AZout                   // ALU Zero output    
+    output  reg  AZout,                // ALU Zero output    
+    output  state_out
 );      
 
     parameter ADD  = 4'b0000;
@@ -18,53 +22,85 @@ module Alu(
     parameter SRA  = 4'b0111;
     parameter OR   = 4'b1000;
     parameter AND  = 4'b1001;
-    parameter MUL  = 99;
-    parameter DIV  = 98;
+    parameter MUL  = 4'b1010;
+    parameter DIV  = 4'b1011;
 
-    // ALU FSM
-    always @(ALUSignal) begin
-        case(state)
-            IDLE: begin
-                if (valid) begin
-                    if (mode) state_nxt = DIV;
-                    else state_nxt = MULT;
+    parameter SCYCLE = 1'b0;
+    parameter MCYCLE = 1'b1;
+
+    reg state = 1'b0;
+    reg mode = 1'b0;
+    reg rst_n;
+    reg valid;
+    reg mulDiv_ready = 1'b0;
+    wire [63:0] mulDivOut;
+    wire ready;
+    wire w_rst_n;
+    wire w_mode;
+    wire w_valid;
+
+    assign state_out = state;
+    assign w_rst_n = rst_n; 
+    assign w_mode = mode; 
+    assign w_valid = valid; 
+
+    Muldiv muldiv(
+        .clk(clk),
+        .rst_n(rst_n),
+        .valid(valid),
+        .mode(mode),
+        .in_A(AiA),
+        .in_B(AiB),
+        .ready(ready),
+        .out(mulDivOut)
+    );
+
+    always @(ready) begin
+        case (state)
+            MCYCLE : begin
+                if (ready == 1'b1) begin
+                    mulDiv_ready  = 1'b1;
+                    state = SCYCLE;
                 end
-                else begin
-                    if (mode) state_nxt = SCC;
-                end
-                else state_nxt = IDLE;
+                else state = SCYCLE; 
             end
-            SCC: begin
-                if (counter == 1) state_nxt = OUT;
+            SCYCLE : begin 
             end
-            MULT: begin
-                if (counter == 31) state_nxt = OUT;
-                else state_nxt = MULT;
+            default : begin
+                state = SCYCLE;
             end
-            DIV : begin
-                if (counter == 31) state_nxt = OUT;
-                else state_nxt = DIV;
-            end
-            OUT : begin
-                state_nxt = IDLE;
-                ready = 1;
-            end
-        default: state_nxt = OUT;
         endcase
     end
 
+    // ALU FSM
     always @(*) begin 
         case(ALUSignal)
             ADD: begin
                 Aout = AiA + AiB;       // Addition
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
+                /** Todo
+                * Hard code here
+                * remove it after fix
+                **/
             end
             SUB: begin
                 Aout = AiA - AiB;       // Substration
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SLL: begin
                 Aout = AiA << AiB;      // Shift AiB bits left
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SLT: begin
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
                 if (AiB[31] == 1'b0) begin
                     if (AiA[31] == 1'b1) Aout = 1'b1;
                     else begin
@@ -81,23 +117,69 @@ module Alu(
                 end
             end
             SLTU: begin                 //Unsigned SLT
-                if (AiA < AiB) Aout = 1'b1;
-                else Aout = 1'b0;
+                if (AiA < AiB)
+                    Aout = 1'b1;
+                else
+                    Aout = 1'b0;
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             XOR: begin
                 Aout = AiA ^ AiB;       // XOR
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SRL: begin
                 Aout = AiA >>> AiB;     // Arithmetic shift AiB bits right
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             SRA: begin
                 Aout = AiA >> AiB;      // Shift AiB bits right
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             OR: begin
                 Aout = AiA | AiB;       // Bitwise OR
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
             end
             AND: begin
                 Aout = AiA & AiB;       // Bitwise AND
+                state = SCYCLE;
+                valid = 1'b0;
+                mulDiv_ready  = 1'b0;
+            end
+            MUL : begin
+                Aout = mulDivOut[31:0];
+                case (state)
+                    SCYCLE : begin
+                        if (mulDiv_ready == 0) begin
+                            rst_n = 1'b1;
+                            valid = 1'b1;
+                            state = MCYCLE;
+                        end
+                        else begin
+                            rst_n = 1'b0;
+                            valid = 1'b0;
+                            state = SCYCLE;
+                        end
+                    end
+                    /** Todo 
+                    *   fix when mul output valid, change state to SCYCLE
+                    *   but in next cycle will change back to MCYCLE
+                    **/
+                    MCYCLE : begin
+                    end
+                endcase
+            end
+            default : begin
+                Aout = 32'b0;
             end
             MUL: begin
                 Aout = AiA * AiB;       // Multiplication
@@ -108,9 +190,9 @@ module Alu(
         endcase
     end
 
-    always @(Aout) begin
-        if (Aout == 0)
-            AZout = 1;
+    always @(*) begin
+        if (Aout == 0) AZout = 1;
+        else AZout = 0;
     end
 
 endmodule

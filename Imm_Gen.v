@@ -18,7 +18,7 @@ module Imm_Gen (
             RTYPE : Imm = 32'h0;
             ITYPE : Imm = {{20{Instruction[24]}}, Instruction[24:13]};
             STYPE : Imm = {{20{Instruction[24]}}, Instruction[24:18], Instruction[4:0]};
-            BTYPE : Imm = {{20{Instruction[24]}}, Instruction[24], Instruction[0], Instruction[23:18], Instruction[4:1], Instruction[0]};
+            BTYPE : Imm = {{20{Instruction[24]}}, Instruction[24], Instruction[0], Instruction[23:18], Instruction[4:1]};
             UTYPE : Imm = {12'b0, Instruction[24:5]};
             JTYPE : Imm ={{12{Instruction[24]}}, Instruction[24], Instruction[12:5], Instruction[13], Instruction[23:14]}; 
             LITYPE : Imm = {{20{Instruction[24]}}, Instruction[24:13]};

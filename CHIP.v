@@ -105,6 +105,7 @@ module CHIP(clk,
     Control control0(
         .Opcode(`OPCODE),
         .PCControl(PCControl),
+        .Branch(Branch),
         .MemRead(MemRead),
         .MemtoReg(MemtoReg),
         .ALUOp(ALUOp),
@@ -155,13 +156,11 @@ module CHIP(clk,
             case (PCControl)
                 2'b00 : PC_nxt = PC + 4;
                 2'b01 : begin
-                        if ((`FUNCT3 == 3'b000) && (ALUResult == 0)) begin
-                            PC_nxt = PC + (ImmOut << 1); // beq
+                        if (Branch) begin       //branch
+                            if ((`FUNCT3 == 3'b000) && (ALUZout == 1'b1)) PC_nxt = PC + (ImmOut << 1);
+                            else if ((`FUNCT3 == 3'b001) && (ALUZout == 1'b0)) PC_nxt = PC + (ImmOut << 1);
+                            else PC_nxt = PC + 4;
                         end
-                        else if ((`FUNCT3 == 3'b001) && (ALUResult != 0)) begin
-                            PC_nxt = PC + (ImmOut << 1); // bne
-                        end
-                        else PC_nxt = PC + 4;
                 end
                 2'b10 : PC_nxt = PC + (ImmOut << 1);   //jal 
                 2'b11 : PC_nxt = ALUResult;          //jalr 

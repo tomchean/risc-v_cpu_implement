@@ -168,10 +168,6 @@ module Alu(
                             state = SCYCLE;
                         end
                     end
-                    /** Todo 
-                    *   fix when mul output valid, change state to SCYCLE
-                    *   but in next cycle will change back to MCYCLE
-                    **/
                     MCYCLE : begin
                     end
                 endcase
